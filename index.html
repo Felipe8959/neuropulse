@@ -107,6 +107,10 @@
             transition: color 0.3s;
         }
         .difficulty-btn:hover {
+            color: var(--near-white);
+        }
+        /* Nova classe para destacar a dificuldade ativa/recomendada */
+        .difficulty-btn.active {
             color: var(--cognitive-blue);
         }
         .caret-icon {
@@ -336,6 +340,17 @@
                 <div class="w-full max-w-md">
                     <h2 class="hidden text-4xl font-bold mb-4 text-center">Expandir Vocabulário</h2>
 
+                    <div class="flex justify-center gap-4 mb-6">
+                        <button data-difficulty="facil" class="difficulty-btn memoria-start-button text-lg font-bold py-3 px-6 rounded-lg">Fácil</button>
+                        <button data-difficulty="intermediario" class="difficulty-btn memoria-start-button text-lg font-bold py-3 px-6 rounded-lg">Intermediário</button>
+                        <button data-difficulty="expert" class="difficulty-btn memoria-start-button text-lg font-bold py-3 px-6 rounded-lg">Expert</button>
+                    </div>
+
+                    <div id="memoria-start-prompt" class="text-center mb-6">
+                        <h2 class="hidden md:block text-4xl font-bold mb-2 text-center">Expandir Vocabulário</h2>
+                        <h3 class="text-xl font-semibold">Escolha um Nível</h3>
+                    </div>
+                                
                     <div id="memoria-game-area" class="hidden">
                         <p id="memoria-difficulty-display" class="text-center text-cool-gray text-lg mb-4"></p>
                         <div class="bg-deep-slate rounded-xl p-1 min-h-[50px] flex items-center justify-center">
@@ -345,18 +360,7 @@
                         <div id="memoria-options" class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
                         <p id="memoria-feedback" class="mt-4 text-lg font-semibold h-6 text-center"></p>
                     </div>
-
-                    <div id="memoria-start-prompt" class="text-center mb-6">
-                        <h2 class="hidden md:block text-4xl font-bold mb-2 text-center">Expandir Vocabulário</h2>
-                        <h3 class="text-xl font-semibold">Escolha um Nível</h3>
-                    </div>
-                    
-                    <div class="flex justify-center gap-4 mb-6">
-                        <button data-difficulty="facil" class="difficulty-btn memoria-start-button text-lg font-bold py-3 px-6 rounded-lg">Fácil</button>
-                        <button data-difficulty="intermediario" class="difficulty-btn memoria-start-button text-lg font-bold py-3 px-6 rounded-lg">Intermediário</button>
-                        <button data-difficulty="expert" class="difficulty-btn memoria-start-button text-lg font-bold py-3 px-6 rounded-lg">Expert</button>
-                    </div>
-                    
+                                
                     <div class="mt-8 text-center">
                         <a href="#memoria-stats" class="nav-link inline-flex items-center gap-2 text-cool-gray hover:text-cognitive-blue p-2 rounded-lg transition-colors duration-300" title="Ver Estatísticas">
                             <i class="ph-thin ph-chart-bar text-2xl"></i>
@@ -369,6 +373,11 @@
             <section id="matematica-view" class="hidden flex flex-col items-center pt-1 min-h-[80vh]">
                 <div class="w-full max-w-lg">
                     <h2 class="hidden text-4xl font-bold mb-4 text-center">Matemática Mental</h2>
+                    <div class="flex justify-center gap-4 mb-6">
+                        <button data-difficulty="facil" class="difficulty-btn matematica-start-button text-lg font-bold py-3 px-6 rounded-lg">Fácil</button>
+                        <button data-difficulty="intermediario" class="difficulty-btn matematica-start-button text-lg font-bold py-3 px-6 rounded-lg">Intermediário</button>
+                        <button data-difficulty="expert" class="difficulty-btn matematica-start-button text-lg font-bold py-3 px-6 rounded-lg">Expert</button>
+                    </div>
                     <div id="matematica-game-area" class="hidden text-center">
                         <div id="matematica-problem" class="text-6xl md:text-7xl font-bold p-8"></div>
                          <div class="text-center mb-4 text-2xl font-mono text-cognitive-blue"><i class="ph-thin ph-timer"></i> <span id="matematica-timer">00:00</span></div>
@@ -378,12 +387,6 @@
                     <div id="matematica-start-prompt" class="text-center mb-6">
                         <h2 class="hidden md:block text-4xl font-bold mb-2 text-center">Matemática Mental</h2>
                         <h3 class="text-xl font-semibold">Escolha um Nível</h3>
-                    </div>
-
-                    <div class="flex justify-center gap-4 mb-6">
-                        <button data-difficulty="facil" class="difficulty-btn matematica-start-button text-lg font-bold py-3 px-6 rounded-lg">Fácil</button>
-                        <button data-difficulty="intermediario" class="difficulty-btn matematica-start-button text-lg font-bold py-3 px-6 rounded-lg">Intermediário</button>
-                        <button data-difficulty="expert" class="difficulty-btn matematica-start-button text-lg font-bold py-3 px-6 rounded-lg">Expert</button>
                     </div>
                     
                     <div class="mt-8 text-center">
@@ -495,6 +498,7 @@
                     isSidebarPinned: false,
                     sidebarHoverTimeout: null,
                     currentMemoryIndex: -1,
+                    curiosityPromise: null, // Adicionado para pré-carregamento
                     ambientPlayer: {
                         isPlaying: false,
                         currentSound: 'none',
@@ -611,8 +615,10 @@
                         }
                         
                         if (viewName === 'curiosidade') NeuroPulseApp.services.wikipedia.loadCuriosity();
-                        if (viewName === 'memoria') NeuroPulseApp.games.common.setupTrainer('memoria');
-                        if (viewName === 'matematica') NeuroPulseApp.games.common.setupTrainer('matematica');
+                        if (viewName === 'memoria' || viewName === 'matematica') {
+                            const difficulty = NeuroPulseApp.games.common.getLastPlayedDifficulty(viewName);
+                            NeuroPulseApp.games.common.startGame(viewName, difficulty);
+                        }
                         if (viewName === 'estatisticas') NeuroPulseApp.charting.renderGeneralChart();
                         if (viewName === 'memoria-stats') NeuroPulseApp.charting.renderTestCharts('memoria');
                         if (viewName === 'matematica-stats') NeuroPulseApp.charting.renderTestCharts('matematica');
@@ -796,29 +802,53 @@
                             const selected = sentences.slice(0, Math.min(3, sentences.length));
                             return `<p>${selected.join(' ').trim()}</p>`;
                         },
+                        prepareCuriosity() {
+                            // Inicia a busca e armazena a "promessa" do resultado no estado.
+                            NeuroPulseApp.state.curiosityPromise = (async () => {
+                                let article = null, attempts = 0;
+                                while (attempts < 10 && !article) {
+                                    try {
+                                        const fetched = await this.fetchRandomSciTechArticle();
+                                        if (fetched?.extract && fetched.extract.length > 20) article = fetched;
+                                    } catch (error) {
+                                        console.error(`Tentativa de busca de curiosidade ${++attempts} falhou:`, error);
+                                    }
+                                }
+
+                                if (article) {
+                                    return `
+                                        <div class="animate-fade-in">
+                                            <h3 class="text-3xl md:text-4xl font-bold mb-4 text-near-white">${article.title}</h3>
+                                            <div class="text-lg md:text-xl text-cool-gray">${this.processExcerpt(article.extract)}</div>
+                                            <button id="reload-curiosity-btn" class="mt-8 p-3 text-cool-gray hover:text-cognitive-blue transition-colors duration-200" title="Gerar nova curiosidade">
+                                                <i class="ph-thin ph-arrow-clockwise text-4xl"></i>
+                                            </button>
+                                        </div>`;
+                                } else {
+                                    return `<span class="text-red-600">Não foi possível carregar uma curiosidade. Tente novamente mais tarde.</span>`;
+                                }
+                            })();
+                        },
                         async loadCuriosity() {
                             const resultEl = NeuroPulseApp.ui.elements.curiosityResult;
                             resultEl.innerHTML = '<p class="text-cool-gray italic">Buscando uma nova curiosidade...</p>';
-                            let article = null, attempts = 0;
-                            while (attempts < 10 && !article) {
-                                try {
-                                    const fetched = await this.fetchRandomSciTechArticle();
-                                    if (fetched?.extract && fetched.extract.length > 20) article = fetched;
-                                } catch (error) { console.error(`Tentativa ${++attempts} falhou:`, error); }
+
+                            try {
+                                // Aguarda a curiosidade que já está carregando em segundo plano.
+                                const curiosityHtml = await NeuroPulseApp.state.curiosityPromise;
+                                resultEl.innerHTML = curiosityHtml;
+
+                                const reloadBtn = document.getElementById('reload-curiosity-btn');
+                                if (reloadBtn) {
+                                    reloadBtn.addEventListener('click', () => this.loadCuriosity());
+                                }
+                            } catch (error) {
+                                console.error("Erro ao exibir curiosidade:", error);
+                                resultEl.innerHTML = `<span class="text-red-600">Ocorreu um erro ao processar a curiosidade.</span>`;
                             }
-                            if (article) {
-                                resultEl.innerHTML = `
-                                    <div class="animate-fade-in">
-                                        <h3 class="text-3xl md:text-4xl font-bold mb-4 text-near-white">${article.title}</h3>
-                                        <div class="text-lg md:text-xl text-cool-gray">${this.processExcerpt(article.extract)}</div>
-                                        <button id="reload-curiosity-btn" class="mt-8 p-3 text-cool-gray hover:text-cognitive-blue transition-colors duration-200" title="Gerar nova curiosidade">
-                                            <i class="ph-thin ph-arrow-clockwise text-4xl"></i>
-                                        </button>
-                                    </div>`;
-                                document.getElementById('reload-curiosity-btn').addEventListener('click', () => this.loadCuriosity());
-                            } else {
-                                resultEl.innerHTML = `<span class="text-red-600">Não foi possível carregar uma curiosidade. Tente novamente mais tarde.</span>`;
-                            }
+
+                            // Após exibir, já começa a preparar a PRÓXIMA curiosidade.
+                            this.prepareCuriosity();
                         }
                     }
                 },
@@ -826,6 +856,30 @@
                 // 5. GAMES: Lógica e estado dos desafios
                 games: {
                     common: {
+                        getLastPlayedDifficulty(type) {
+                            const gameStats = NeuroPulseApp.state.stats[type];
+                            let lastTimestamp = 0;
+                            let lastDifficulty = null;
+
+                            // Itera sobre as dificuldades (facil, intermediario, expert)
+                            for (const difficulty in gameStats) {
+                                const level = gameStats[difficulty];
+                                if (level && level.sessions && level.sessions.length > 0) {
+                                    // Encontra a sessão mais recente dentro deste nível de dificuldade
+                                    const latestSessionInLevel = level.sessions.reduce((latest, session) => {
+                                        return session.timestamp > latest.timestamp ? session : latest;
+                                    }, { timestamp: 0 });
+
+                                    // Se esta for a sessão mais recente de todas até agora, atualiza
+                                    if (latestSessionInLevel.timestamp > lastTimestamp) {
+                                        lastTimestamp = latestSessionInLevel.timestamp;
+                                        lastDifficulty = difficulty;
+                                    }
+                                }
+                            }
+                            // Retorna a última dificuldade jogada ou 'facil' como padrão
+                            return lastDifficulty || 'facil';
+                        },
                         formatTime: (s) => `${Math.floor(s / 60).toString().padStart(2, '0')}:${(s % 60).toString().padStart(2, '0')}`,
                         startTimer(type) {
                             const timerEl = document.getElementById(`${type}-timer`);
@@ -853,11 +907,25 @@
                         startGame(type, difficulty) {
                             this.stopSession();
                             NeuroPulseApp.state.activeSession = { ...NeuroPulseApp.state.activeSession, type, difficulty, acertos: 0, erros: 0 };
-                            
-                            // Oculta apenas os títulos e mostra a área do jogo
+
                             document.getElementById(`${type}-start-prompt`).classList.add('hidden');
                             document.getElementById(`${type}-game-area`).classList.remove('hidden');
-                            
+
+                            // Limpa o texto de nível que existia no jogo de vocabulário
+                            const difficultyDisplay = document.getElementById('memoria-difficulty-display');
+                            if (difficultyDisplay) {
+                                difficultyDisplay.textContent = '';
+                            }
+
+                            // Destaca o botão da dificuldade atual
+                            document.querySelectorAll(`.${type}-start-button`).forEach(btn => {
+                                btn.classList.remove('active');
+                            });
+                            const activeButton = document.querySelector(`.${type}-start-button[data-difficulty="${difficulty}"]`);
+                            if (activeButton) {
+                                activeButton.classList.add('active');
+                            }
+
                             this.startTimer(type);
                             if (type === 'memoria') NeuroPulseApp.games.memoria.showQuestion();
                             if (type === 'matematica') NeuroPulseApp.games.matematica.generateProblem();
@@ -943,8 +1011,22 @@
                             const container = document.getElementById('matematica-options');
                             let problem = '', answer = 0;
                             const num1 = Math.floor(Math.random() * 10) + 1, num2 = Math.floor(Math.random() * 10) + 1;
+                            const difficulty = NeuroPulseApp.state.activeSession.difficulty;
+
+                            //--- INÍCIO DA ALTERAÇÃO ---
+                            // Ajusta o tamanho da fonte para evitar quebra de linha no mobile
+                            if (difficulty === 'expert') {
+                                // Usa fontes menores para o nível expert
+                                problemEl.classList.remove('text-6xl', 'md:text-7xl');
+                                problemEl.classList.add('text-5xl', 'md:text-6xl');
+                            } else {
+                                // Garante que os outros níveis usem as fontes grandes padrão
+                                problemEl.classList.remove('text-5xl', 'md:text-6xl');
+                                problemEl.classList.add('text-6xl', 'md:text-7xl');
+                            }
+                            //--- FIM DA ALTERAÇÃO ---
                             
-                            switch(NeuroPulseApp.state.activeSession.difficulty) {
+                            switch(difficulty) {
                                 case 'facil':
                                     if (Math.random() > 0.5) { problem = `${num1+num2} - ${num1}`; answer = num2; } else { problem = `${num1} + ${num2}`; answer = num1 + num2; }
                                     break;
@@ -1210,6 +1292,14 @@
                             });
                         });
                     });
+                    ['memoria', 'matematica'].forEach(type => {
+                        document.querySelectorAll(`.${type}-start-button`).forEach(btn => {
+                            btn.addEventListener('click', () => {
+                                // Inicia o jogo com a dificuldade do botão clicado
+                                NeuroPulseApp.games.common.startGame(type, btn.dataset.difficulty);
+                            });
+                        });
+                    });
                 },
 
                 handleHashChange() {
@@ -1221,6 +1311,7 @@
                     this.services.persistence.loadStats();
                     this.ambientPlayer.init();
                     this.bindEvents();
+                    this.services.wikipedia.prepareCuriosity(); // << ADICIONE ESTA LINHA
                     
                     const savedTheme = localStorage.getItem('theme') || 'dark';
                     this.ui.applyTheme(savedTheme);
