@@ -1,0 +1,1240 @@
+<!DOCTYPE html>
+<html lang="pt-BR" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NeuroPulse - Treinamento Cognitivo</title>
+
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧠</text></svg>">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Phosphor Icons -->
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        :root {
+            --abyss-black: #ffffff; /* Light mode background */
+            --deep-slate: #f0f2f5; /* Light mode surface */
+            --cognitive-blue: #60a5fa; /* Light mode blue - Updated */
+            --near-white: #1f2937; /* Light mode text */
+            --cool-gray: #6b7280;
+            --success-green: #16a34a;
+            --warning-yellow: #f59e0b;
+            --error-red: #dc2626;
+            --border-color: #dcdfe4;
+            --sidebar-hover-bg: rgba(0, 0, 0, 0.04);
+        }
+        html.dark {
+            --abyss-black: #121212;
+            --deep-slate: #1E1E1E;
+            --cognitive-blue: #4A90E2;
+            --near-white: #EAEAEA;
+            --cool-gray: #888888;
+            --success-green: #2ECC71;
+            --warning-yellow: #F1C40F;
+            --error-red: #E74C3C;
+            --border-color: rgba(255, 255, 255, 0.1);
+            --sidebar-hover-bg: rgba(255, 255, 255, 0.05);
+        }
+        body {
+            background-color: var(--abyss-black);
+            color: var(--near-white);
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+        #sidebar {
+            background-color: var(--deep-slate);
+            width: 280px;
+            transition: width 0.3s ease-in-out;
+            border-color: var(--border-color);
+        }
+        #sidebar.collapsed {
+            width: 80px;
+        }
+        #main-content {
+            transition: margin-left 0.3s ease-in-out;
+        }
+        .sidebar-item-text, .sidebar-logo-text, .sidebar-tooltip {
+            transition: opacity 0.2s, visibility 0.2s;
+        }
+        #sidebar.collapsed .sidebar-item-text, #sidebar.collapsed .sidebar-logo-text {
+            opacity: 0;
+            visibility: hidden;
+            width: 0;
+        }
+        #sidebar.collapsed #sidebar-toggle-icon {
+            transform: rotate(180deg);
+        }
+        .nav-link.active, .filter-btn.active {
+            color: var(--cognitive-blue);
+            background-color: rgba(74, 144, 226, 0.1);
+        }
+        .option-btn {
+            background-color: var(--abyss-black);
+            border: 2px solid var(--border-color);
+        }
+        .option-btn:hover:not(:disabled) {
+            border-color: var(--cognitive-blue);
+            color: var(--cognitive-blue);
+        }
+        .option-btn.correct {
+            background-color: var(--success-green);
+            border-color: var(--success-green);
+            color: white;
+        }
+        .option-btn.incorrect {
+            background-color: var(--error-red);
+            border-color: var(--error-red);
+            color: white;
+        }
+        .option-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+        .difficulty-btn {
+            background-color: transparent;
+            color: var(--cool-gray);
+            transition: color 0.3s;
+        }
+        .difficulty-btn:hover {
+            color: var(--cognitive-blue);
+        }
+        .caret-icon {
+            transition: transform 0.3s ease-in-out;
+        }
+        #sidebar.collapsed .sidebar-item:hover .sidebar-tooltip {
+            opacity: 1;
+            visibility: visible;
+        }
+        /* Estilos para os Cards da Home */
+        .home-challenge-link {
+            /* Define a transição para as propriedades que vamos alterar no próprio card */
+            transition: transform 0.5s ease-in-out, border-color 0.5s ease-in-out;
+        }
+
+        .home-challenge-link h2,
+        .home-challenge-link p {
+            /* A transição da cor do texto também precisa ser definida nos elementos de texto */
+            transition: color 0.14s ease-in-out;
+        }
+
+        .home-challenge-link:hover {
+            /* Aplica a escala e uma cor de borda neutra no hover */
+            transform: scale(1.02);
+            border-color: var(--near-white);
+        }
+
+        /* Estilo de hover centralizado para itens da barra lateral */
+        #sidebar nav a:hover, 
+        #sidebar nav button:hover {
+            background-color: var(--sidebar-hover-bg);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in {
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+
+        #home-header,
+        #mobile-header {
+            background-color: var(--abyss-black); /* Define o fundo sólido */
+        }
+
+        #home-header nav,
+        #mobile-header nav {
+            padding-top: 0.5rem;    /* Diminui o padding superior */
+            padding-bottom: 0.5rem; /* Diminui o padding inferior */
+        }
+        /* Estilos para as opções do seletor de som ambiente */
+        .themed-option {
+            background-color: var(--abyss-black);
+            color: var(--near-white);
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+
+    <!-- CABEÇALHO DA PÁGINA INICIAL -->
+    <header id="home-header" class="md:hidden bg-abyss-black/80 backdrop-blur-sm sticky top-0 z-20 border-b" style="border-color: var(--border-color);">
+        <nav class="container mx-auto px-4 sm:px-6 py-3 flex justify-between items-center">
+            <button id="home-hamburger-btn" class="p-2 -ml-2 text-near-white md:hidden">
+                <i class="ph-thin ph-list text-3xl"></i>
+            </button>
+            
+            <div id="home-logo" class="flex items-center gap-2 text-2xl font-bold cursor-pointer absolute left-1/2 -translate-x-1/2 md:static md:left-auto md:translate-x-0">
+                <i class="ph-thin ph-brain text-cognitive-blue"></i>
+                <span class="hidden sm:inline">NeuroPulse</span>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <button id="home-play-pause-btn" class="hidden p-2 rounded-lg text-cool-gray hover:text-cognitive-blue">
+                    <i id="home-play-pause-icon" class="ph-thin ph-play text-2xl"></i>
+                </button>
+                <button id="home-theme-toggle" class="hidden p-2 rounded-lg text-cool-gray">
+                   <i id="home-theme-icon" class="ph-thin ph-sun text-2xl"></i>
+                </button>
+            </div>
+        </nav>
+    </header>
+
+    <!-- BARRA LATERAL PARA PÁGINAS INTERNAS -->
+    <aside id="sidebar" class="fixed top-0 left-0 h-full bg-deep-slate/100 z-40 flex flex-col transform -translate-x-full transition-transform duration-300 md:transform-none md:translate-x-0">
+        <div class="p-4 flex items-center justify-between border-b" style="border-color: var(--border-color);">
+            <a href="#home" id="sidebar-logo" class="flex items-center gap-3 text-2xl font-bold whitespace-nowrap overflow-hidden">
+                <i class="ph-thin ph-brain text-cognitive-blue"></i>
+                <span class="sidebar-logo-text">NeuroPulse</span>
+            </a>
+            <button id="sidebar-close-btn" class="p-1 text-cool-gray hover:text-near-white md:hidden">
+                <i class="ph-thin ph-x text-2xl"></i>
+            </button>
+            <button id="sidebar-toggle" class="hidden md:block p-1 text-cool-gray hover:text-near-white">
+                <i id="sidebar-toggle-icon" class="ph-thin ph-caret-circle-left text-2xl transition-transform duration-300"></i>
+            </button>
+        </div>
+
+        <nav class="flex-grow p-4">
+            <ul class="space-y-2">
+                <li class="relative sidebar-item">
+                    <a href="#curiosidade" class="nav-link flex items-center gap-3 p-3 rounded-lg text-near-white">
+                        <i class="ph-thin ph-lightbulb text-xl"></i>
+                        <span class="sidebar-item-text">Curiosidade aleatória</span>
+                    </a>
+                    <span class="sidebar-tooltip absolute left-full ml-4 top-1/2 -translate-y-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 invisible whitespace-nowrap">Curiosidade</span>
+                </li>
+                <li class="relative sidebar-item">
+                    <button id="desafios-toggle" class="w-full flex justify-between items-center p-3 rounded-lg text-near-white">
+                        <div class="flex items-center gap-3">
+                            <i class="ph-thin ph-game-controller text-xl"></i>
+                            <span class="sidebar-item-text">Desafios</span>
+                        </div>
+                        <i id="desafios-caret" class="ph-thin ph-caret-down caret-icon sidebar-item-text"></i>
+                    </button>
+                    <span class="sidebar-tooltip absolute left-full ml-4 top-1/2 -translate-y-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 invisible whitespace-nowrap">Desafios</span>
+                    <ul id="desafios-submenu" class="pl-6 pt-1 hidden space-y-2">
+                        <li><a href="#memoria" class="nav-link flex items-center gap-3 p-3 rounded-lg text-near-white"><i class="ph-thin ph-cards text-xl"></i><span class="sidebar-item-text">Expandir Vocabulário</span></a></li>
+                        <li><a href="#matematica" class="nav-link flex items-center gap-3 p-3 rounded-lg text-near-white"><i class="ph-thin ph-calculator text-xl"></i><span class="sidebar-item-text">Matemática Mental</span></a></li>
+                    </ul>
+                </li>
+                <li class="relative sidebar-item">
+                    <button id="ambient-toggle" class="w-full flex justify-between items-center p-3 rounded-lg text-near-white">
+                        <div class="flex items-center gap-3">
+                            <i class="ph-thin ph-speaker-simple-high text-xl"></i>
+                            <span class="sidebar-item-text">Neuroestimulação</span>
+                        </div>
+                        <i id="ambient-caret" class="ph-thin ph-caret-down caret-icon sidebar-item-text"></i>
+                    </button>
+                    <span class="sidebar-tooltip absolute left-full ml-4 top-1/2 -translate-y-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 invisible whitespace-nowrap">Som Ambiente</span>
+                    <div id="ambient-submenu" class="pl-4 pt-1 hidden">
+                        <div id="ambient-player" class="p-3 text-near-white sidebar-item-text">
+                            <div class="flex justify-center py-1">
+                                <button id="ambient-play-pause-btn" class="p-1 text-cool-gray hover:text-near-white" title="Tocar/Pausar">
+                                    <i id="ambient-play-icon" class="ph-thin ph-play text-2xl"></i>
+                                </button>
+                            </div>
+                            <div class="mt-3 space-y-2">
+                                <select id="ambient-sound-select" class="w-full bg-transparent border text-near-white rounded-md p-1 text-sm" style="border-color: var(--border-color);">
+                                    <option class="themed-option" value="none">Nenhum</option>
+                                    <option class="themed-option" value="brown-noise">Foco (Ruído Marrom)</option>
+                                    <option class="themed-option" value="852hz">Intuição (852Hz)</option>
+                                    <option class="themed-option" value="40hz">Sincronização Neural (40Hz)</option>
+                                </select>
+                                <input type="range" id="ambient-volume-slider" min="0" max="1" step="0.05" value="0.5" class="w-full h-1 bg-gray-700 rounded-lg appearance-none cursor-pointer" title="Volume">
+                            </div>
+                        </div>
+                    </div>
+                </li>
+                <li class="relative sidebar-item">
+                    <a href="#estatisticas" class="nav-link flex items-center gap-3 p-3 rounded-lg text-near-white">
+                        <i class="ph-thin ph-chart-bar text-xl"></i>
+                        <span class="sidebar-item-text">Estatísticas Gerais</span>
+                    </a>
+                    <span class="sidebar-tooltip absolute left-full ml-4 top-1/2 -translate-y-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 invisible whitespace-nowrap">Estatísticas</span>
+                </li>
+            </ul>
+        </nav>
+        
+        <div class="mt-auto">
+            <div class="p-2 border-t" style="border-color: var(--border-color);">
+                <button id="theme-toggle" class="w-full flex items-center justify-center p-2 rounded-lg text-cool-gray">
+                    <i id="theme-icon" class="ph-thin ph-sun text-2xl"></i>
+                </button>
+            </div>
+        </div>
+    </aside>
+    <!-- MOBILE  -->
+    <header id="mobile-header" class="hidden md:hidden sticky top-0 bg-deep-slate/80 backdrop-blur-sm z-30 border-b" style="border-color: var(--border-color);">
+        <nav class="container mx-auto px-4 py-3 flex justify-between items-center relative">
+            <button id="hamburger-btn" class="p-2 -ml-2 text-near-white">
+                <i class="ph-thin ph-list text-3xl"></i>
+            </button>
+            <h2 id="mobile-header-title" class="absolute left-1/2 -translate-x-1/2 text-lg font-bold text-near-white truncate"></h2>
+            <button id="mobile-play-pause-btn" class="hidden p-2 -mr-2 rounded-lg text-cool-gray hover:text-cognitive-blue">
+                <i id="mobile-play-pause-icon" class="ph-thin ph-play text-2xl"></i>
+            </button>
+        </nav>
+    </header>
+
+    <div id="sidebar-backdrop" class="hidden fixed inset-0 bg-black/50 z-30"></div>
+
+    <!-- CONTEÚDO PRINCIPAL -->
+    <main id="main-content" class="flex-grow md:ml-[280px] transition-all duration-300">
+        <header id="main-top-bar" class="hidden justify-end items-center p-2 sticky top-0 z-20" style="background-color: var(--abyss-black); height: 60px;">
+            <button id="main-play-pause-btn" class="hidden p-2 rounded-lg text-cool-gray hover:text-cognitive-blue">
+            <i id="main-play-pause-icon" class="ph-thin ph-play text-2xl"></i>
+            </button>
+        </header>
+        <div id="content-wrapper" class="container mx-auto px-6 py-8 md:py-16">
+            <section id="home-view">
+                <div class="text-center">
+                    <h1 class="text-4xl md:text-6xl font-extrabold mb-4">Bem-vindo ao <span class="text-cognitive-blue">NeuroPulse</span></h1>
+                    <p class="text-lg md:text-xl text-cool-gray max-w-2xl mx-auto">Sua plataforma de treinamento cognitivo</p>
+                    <div class="mt-12 grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+                        <!-- Card para Curiosidades -->
+                        <a href="#curiosidade"
+                            class="home-challenge-link bg-deep-slate p-4 rounded-xl border
+                                    transition-all duration-300
+                                    flex flex-col items-center text-center group"
+                            style="border-color: var(--border-color);">
+                            <i class="ph-thin ph-lightbulb text-5xl text-cognitive-blue mb-4"></i>
+                            <h2 class="text-2xl font-bold mb-2">Curiosidades</h2>
+                            <p class="text-cool-gray">Descubra fatos interessantes e aleatórios</p>
+                        </a>
+
+                        <a href="#memoria" class="home-challenge-link bg-deep-slate p-4 rounded-xl border transition-all duration-300 flex flex-col items-center text-center group" style="border-color: var(--border-color);">
+                            <i class="ph-thin ph-cards text-5xl text-cognitive-blue mb-4"></i>
+                            <h2 class="text-2xl font-bold mb-2">Expandir Vocabulário</h2>
+                            <p class="text-cool-gray">Teste e amplie o seu repertório de palavras</p>
+                        </a>
+                        <a href="#matematica" class="home-challenge-link bg-deep-slate p-4 rounded-xl border transition-all duration-300 flex flex-col items-center text-center" style="border-color: var(--border-color);">
+                            <i class="ph-thin ph-calculator text-5xl text-cognitive-blue mb-4"></i>
+                            <h2 class="text-2xl font-bold mb-2">Matemática Mental</h2>
+                            <p class="text-cool-gray">Aumente sua agilidade mental com desafios de cálculo</p>
+                        </a>
+                    </div>
+                </div>
+            </section>
+
+            <!-- View de Curiosidade -->
+            <section id="curiosidade" class="hidden flex flex-col items-center pt-8 min-h-[80vh] p-4 text-center">
+                <div id="curiosityResult" class="max-w-3xl"></div>
+            </section>
+
+            <section id="memoria-view" class="hidden flex flex-col items-center pt-1 min-h-[80vh]">
+                <div class="w-full max-w-md">
+                    <h2 class="hidden text-4xl font-bold mb-4 text-center">Expandir Vocabulário</h2>
+
+                    <div id="memoria-game-area" class="hidden">
+                        <p id="memoria-difficulty-display" class="text-center text-cool-gray text-lg mb-4"></p>
+                        <div class="bg-deep-slate rounded-xl p-1 min-h-[50px] flex items-center justify-center">
+                            <p id="memoria-question" class="text-4xl font-semibold"></p>
+                        </div>
+                        <div class="text-center mt-4 text-2xl font-mono text-cognitive-blue"><i class="ph-thin ph-timer"></i> <span id="memoria-timer">00:00</span></div>
+                        <div id="memoria-options" class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4"></div>
+                        <p id="memoria-feedback" class="mt-4 text-lg font-semibold h-6 text-center"></p>
+                    </div>
+
+                    <div id="memoria-start-prompt" class="text-center mb-6">
+                        <h2 class="hidden md:block text-4xl font-bold mb-2 text-center">Expandir Vocabulário</h2>
+                        <h3 class="text-xl font-semibold">Escolha um Nível</h3>
+                    </div>
+                    
+                    <div class="flex justify-center gap-4 mb-6">
+                        <button data-difficulty="facil" class="difficulty-btn memoria-start-button text-lg font-bold py-3 px-6 rounded-lg">Fácil</button>
+                        <button data-difficulty="intermediario" class="difficulty-btn memoria-start-button text-lg font-bold py-3 px-6 rounded-lg">Intermediário</button>
+                        <button data-difficulty="expert" class="difficulty-btn memoria-start-button text-lg font-bold py-3 px-6 rounded-lg">Expert</button>
+                    </div>
+                    
+                    <div class="mt-8 text-center">
+                        <a href="#memoria-stats" class="nav-link inline-flex items-center gap-2 text-cool-gray hover:text-cognitive-blue p-2 rounded-lg transition-colors duration-300" title="Ver Estatísticas">
+                            <i class="ph-thin ph-chart-bar text-2xl"></i>
+                            <span>Ver Estatísticas</span>
+                        </a>
+                    </div>
+                </div>
+            </section>
+
+            <section id="matematica-view" class="hidden flex flex-col items-center pt-1 min-h-[80vh]">
+                <div class="w-full max-w-lg">
+                    <h2 class="hidden text-4xl font-bold mb-4 text-center">Matemática Mental</h2>
+                    <div id="matematica-game-area" class="hidden text-center">
+                        <div id="matematica-problem" class="text-6xl md:text-7xl font-bold p-8"></div>
+                         <div class="text-center mb-4 text-2xl font-mono text-cognitive-blue"><i class="ph-thin ph-timer"></i> <span id="matematica-timer">00:00</span></div>
+                        <div id="matematica-options" class="mt-4 grid grid-cols-2 gap-4 w-full max-w-sm mx-auto"></div>
+                        <p id="matematica-feedback" class="mt-6 h-6 text-lg font-semibold"></p>
+                    </div>
+                    <div id="matematica-start-prompt" class="text-center mb-6">
+                        <h2 class="hidden md:block text-4xl font-bold mb-2 text-center">Matemática Mental</h2>
+                        <h3 class="text-xl font-semibold">Escolha um Nível</h3>
+                    </div>
+
+                    <div class="flex justify-center gap-4 mb-6">
+                        <button data-difficulty="facil" class="difficulty-btn matematica-start-button text-lg font-bold py-3 px-6 rounded-lg">Fácil</button>
+                        <button data-difficulty="intermediario" class="difficulty-btn matematica-start-button text-lg font-bold py-3 px-6 rounded-lg">Intermediário</button>
+                        <button data-difficulty="expert" class="difficulty-btn matematica-start-button text-lg font-bold py-3 px-6 rounded-lg">Expert</button>
+                    </div>
+                    
+                    <div class="mt-8 text-center">
+                        <a href="#matematica-stats" class="nav-link inline-flex items-center gap-2 text-cool-gray hover:text-cognitive-blue p-2 rounded-lg transition-colors duration-300" title="Ver Estatísticas">
+                            <i class="ph-thin ph-chart-bar text-2xl"></i>
+                            <span>Ver Estatísticas</span>
+                        </a>
+                    </div>
+                 </div>
+            </section>
+
+            <section id="estatisticas-view" class="hidden">
+                <h2 class="text-3xl font-bold mb-8 text-center">Estatísticas</h2>
+                <div class="bg-deep-slate p-4 rounded-xl border mb-8" style="border-color: var(--border-color);">
+                    <h3 class="text-xl font-bold mb-4 text-cognitive-blue">Desempenho Geral Comparativo</h3>
+                    <div class="h-64"><canvas id="general-summary-chart"></canvas></div>
+                </div>
+                
+                <h3 class="text-2xl font-bold mb-4 text-center">Análises Individuais</h3>
+                <div class="space-y-4">
+                    <a href="#memoria-stats" class="nav-link bg-deep-slate p-4 rounded-xl border flex justify-between items-center hover:border-cognitive-blue transition-all duration-300" style="border-color: var(--border-color);">
+                        <h4 class="text-xl font-bold text-near-white flex items-center gap-3"><i class="ph-thin ph-cards"></i> Expandir Vocabulário</h4>
+                        <i class="ph-thin ph-arrow-circle-right text-2xl text-cool-gray"></i>
+                    </a>
+                    <a href="#matematica-stats" class="nav-link bg-deep-slate p-4 rounded-xl border flex justify-between items-center hover:border-cognitive-blue transition-all duration-300" style="border-color: var(--border-color);">
+                        <h4 class="text-xl font-bold text-near-white flex items-center gap-3"><i class="ph-thin ph-calculator"></i> Matemática Mental</h4>
+                        <i class="ph-thin ph-arrow-circle-right text-2xl text-cool-gray"></i>
+                    </a>
+                </div>
+            </section>
+
+            <section id="memoria-stats-view" class="hidden">
+                <div class="flex justify-between items-center mb-8">
+                    <h2 class="text-3xl font-bold">Estatísticas: Vocabulário</h2>
+                    <button onclick="window.history.back()" class="flex items-center gap-2 text-cognitive-blue hover:underline">
+                        <i class="ph-thin ph-arrow-left"></i> Voltar
+                    </button>
+                </div>
+                <div class="p-4 pt-0 space-y-8">
+                     <div class="flex justify-center gap-2 mb-4" id="memoria-difficulty-filters">
+                         <button data-filter="all" class="filter-btn memoria-filter-btn active px-3 py-1 rounded-md text-sm">Todos</button>
+                         <button data-filter="facil" class="filter-btn memoria-filter-btn px-3 py-1 rounded-md text-sm">Fácil</button>
+                         <button data-filter="intermediario" class="filter-btn memoria-filter-btn px-3 py-1 rounded-md text-sm">Intermediário</button>
+                         <button data-filter="expert" class="filter-btn memoria-filter-btn px-3 py-1 rounded-md text-sm">Expert</button>
+                     </div>
+                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-center">
+                         <div class="bg-abyss-black p-4 rounded-lg md:col-span-2 lg:col-span-1"> <p class="text-sm text-cool-gray">Acurácia <span class="text-xs">(15 dias)</span></p> <p id="memoria-acuracia" class="text-3xl font-bold">0%</p> </div>
+                         <div class="bg-abyss-black p-4 rounded-lg md:col-span-2 lg:col-span-1"> <p class="text-sm text-cool-gray">Total de Sessões</p> <p id="memoria-sessoes" class="text-3xl font-bold">0</p> </div>
+                         <div class="h-48 md:h-64 lg:col-span-2"><canvas id="memoria-chart"></canvas></div>
+                     </div>
+                     <div class="border-t pt-6" style="border-color: var(--border-color);">
+                         <h4 class="font-bold text-lg mb-4 text-left text-cool-gray">Análise por Duração da Sessão</h4>
+                         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                             <div class="h-72"><canvas id="memoria-scatter-chart"></canvas></div>
+                             <div class="h-72"><canvas id="memoria-grouped-bar-chart"></canvas></div>
+                             <div class="lg:col-span-2 h-72"><canvas id="memoria-line-chart"></canvas></div>
+                         </div>
+                     </div>
+                </div>
+            </section>
+            
+            <section id="matematica-stats-view" class="hidden">
+                 <div class="flex justify-between items-center mb-8">
+                    <h2 class="text-3xl font-bold">Estatísticas: Matemática Mental</h2>
+                    <button onclick="window.history.back()" class="flex items-center gap-2 text-cognitive-blue hover:underline">
+                        <i class="ph-thin ph-arrow-left"></i> Voltar
+                    </button>
+                </div>
+                <div class="p-4 pt-0 space-y-8">
+                    <div class="flex justify-center gap-2 mb-4" id="matematica-difficulty-filters">
+                         <button data-filter="all" class="filter-btn matematica-filter-btn active px-3 py-1 rounded-md text-sm">Todos</button>
+                         <button data-filter="facil" class="filter-btn matematica-filter-btn px-3 py-1 rounded-md text-sm">Fácil</button>
+                         <button data-filter="intermediario" class="filter-btn matematica-filter-btn px-3 py-1 rounded-md text-sm">Intermediário</button>
+                         <button data-filter="expert" class="filter-btn matematica-filter-btn px-3 py-1 rounded-md text-sm">Expert</button>
+                     </div>
+                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-center">
+                         <div class="bg-abyss-black p-4 rounded-lg md:col-span-2 lg:col-span-1"> <p class="text-sm text-cool-gray">Acurácia <span class="text-xs">(15 dias)</span></p> <p id="matematica-acuracia" class="text-3xl font-bold">0%</p> </div>
+                         <div class="bg-abyss-black p-4 rounded-lg md:col-span-2 lg:col-span-1"> <p class="text-sm text-cool-gray">Total de Sessões</p> <p id="matematica-sessoes" class="text-3xl font-bold">0</p> </div>
+                         <div class="h-48 md:h-64 lg:col-span-2"><canvas id="matematica-chart"></canvas></div>
+                     </div>
+                     <div class="border-t pt-6" style="border-color: var(--border-color);">
+                         <h4 class="font-bold text-lg mb-4 text-left text-cool-gray">Análise por Duração da Sessão</h4>
+                         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                             <div class="h-72"><canvas id="matematica-scatter-chart"></canvas></div>
+                             <div class="h-72"><canvas id="matematica-grouped-bar-chart"></canvas></div>
+                             <div class="lg:col-span-2 h-72"><canvas id="matematica-line-chart"></canvas></div>
+                         </div>
+                     </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <audio id="audio-brown-noise" loop src="sound/brown.mp3"></audio>
+    <audio id="audio-852hz" loop src="sound/852hz.mp3"></audio>
+    <audio id="audio-40hz" loop src="sound/40hz.mp3"></audio>
+
+    <script src="config.js"></script> <!-- Constantes e configurações -->
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const NeuroPulseApp = {
+                // 1. STATE: Centraliza todo o estado da aplicação
+                state: {
+                    activeSession: { type: null, difficulty: null, startTime: null, timerInterval: null, acertos: 0, erros: 0 },
+                    stats: { memoria: { facil: {}, intermediario: {}, expert: {} }, matematica: { facil: {}, intermediario: {}, expert: {} } },
+                    charts: {},
+                    currentFilters: { memoria: 'all', matematica: 'all' },
+                    isSidebarPinned: false,
+                    sidebarHoverTimeout: null,
+                    currentMemoryIndex: -1,
+                    ambientPlayer: {
+                        isPlaying: false,
+                        currentSound: 'none',
+                        volume: 0.5,
+                        audioElements: {},
+                    }
+                },
+
+                // 2. CONFIG: Constantes e configurações
+                config: APP_CONFIG,
+
+                // 3. UI: Elementos do DOM e funções de manipulação da interface
+                ui: {
+                    elements: {},
+                    cacheElements() {
+                        this.elements = {
+                            sidebar: document.getElementById('sidebar'),
+                            mainContent: document.getElementById('main-content'),
+                            homeHeader: document.getElementById('home-header'),
+                            mobileHeader: document.getElementById('mobile-header'),
+                            mainTopBar: document.getElementById('main-top-bar'),
+                            mobileHeaderTitle: document.getElementById('mobile-header-title'),
+                            hamburgerBtn: document.getElementById('hamburger-btn'),
+                            homeHamburgerBtn: document.getElementById('home-hamburger-btn'),
+                            sidebarBackdrop: document.getElementById('sidebar-backdrop'),
+                            sidebarCloseBtn: document.getElementById('sidebar-close-btn'),
+                            sidebarToggleBtn: document.getElementById('sidebar-toggle'),
+                            sidebarToggleIcon: document.getElementById('sidebar-toggle-icon'),
+                            sidebarLogo: document.getElementById('sidebar-logo'),
+                            homeLogo: document.getElementById('home-logo'),
+                            themeToggle: document.getElementById('theme-toggle'),
+                            homeThemeToggle: document.getElementById('home-theme-toggle'),
+                            desafiosToggle: document.getElementById('desafios-toggle'),
+                            desafiosSubmenu: document.getElementById('desafios-submenu'),
+                            desafiosCaret: document.getElementById('desafios-caret'),
+                            ambientToggle: document.getElementById('ambient-toggle'),
+                            ambientSubmenu: document.getElementById('ambient-submenu'),
+                            ambientCaret: document.getElementById('ambient-caret'),
+                            navLinks: document.querySelectorAll('.nav-link'),
+                            views: {
+                                home: document.getElementById('home-view'),
+                                memoria: document.getElementById('memoria-view'),
+                                matematica: document.getElementById('matematica-view'),
+                                estatisticas: document.getElementById('estatisticas-view'),
+                                'memoria-stats': document.getElementById('memoria-stats-view'),
+                                'matematica-stats': document.getElementById('matematica-stats-view'),
+                                curiosidade: document.getElementById('curiosidade')
+                            },
+                            curiosityResult: document.getElementById('curiosityResult'),
+                            ambient: {
+                                playPauseBtn: document.getElementById('ambient-play-pause-btn'),
+                                playIcon: document.getElementById('ambient-play-icon'),
+                                mainPlayPauseBtn: document.getElementById('main-play-pause-btn'),
+                                mainPlayIcon: document.getElementById('main-play-pause-icon'),
+                                mobilePlayPauseBtn: document.getElementById('mobile-play-pause-btn'),
+                                mobilePlayIcon: document.getElementById('mobile-play-pause-icon'),
+                                homePlayPauseBtn: document.getElementById('home-play-pause-btn'),
+                                homePlayIcon: document.getElementById('home-play-pause-icon'),
+                                soundSelect: document.getElementById('ambient-sound-select'),
+                                volumeSlider: document.getElementById('ambient-volume-slider'),
+                                audio: {
+                                    'brown-noise': document.getElementById('audio-brown-noise'),
+                                    '852hz': document.getElementById('audio-852hz'),
+                                    '40hz': document.getElementById('audio-40hz'),
+                                }
+                            }
+                        };
+                    },
+                    applyTheme(theme) {
+                        const isDark = theme === 'dark';
+                        document.documentElement.classList.toggle('dark', isDark);
+                        
+                        ['theme-icon', 'home-theme-icon'].forEach(id => {
+                            const icon = document.getElementById(id);
+                            if (icon) {
+                                icon.classList.toggle('ph-sun', isDark);
+                                icon.classList.toggle('ph-moon', !isDark);
+                            }
+                        });
+
+                        // Atualiza gráficos se a view de estatísticas estiver visível
+                        Object.values(NeuroPulseApp.state.charts).forEach(chart => chart.destroy());
+                        NeuroPulseApp.state.charts = {};
+                        const currentView = window.location.hash.substring(1) || 'home';
+                        if (currentView === 'estatisticas') NeuroPulseApp.charting.renderGeneralChart();
+                        if (currentView === 'memoria-stats') NeuroPulseApp.charting.renderTestCharts('memoria');
+                        if (currentView === 'matematica-stats') NeuroPulseApp.charting.renderTestCharts('matematica');
+                    },
+                    toggleTheme() {
+                        const newTheme = document.documentElement.classList.contains('dark') ? 'light' : 'dark';
+                        localStorage.setItem('theme', newTheme);
+                        NeuroPulseApp.ui.applyTheme(newTheme);
+                    },
+                    showView(viewName) {
+                        NeuroPulseApp.games.common.stopSession();
+                        this.closeMobileSidebar();
+                        Object.values(this.elements.views).forEach(view => view.classList.add('hidden'));
+
+                        const isHome = viewName === 'home' || !viewName;
+                        const viewTitles = { curiosidade: 'Curiosidade', memoria: 'Expandir Vocabulário', matematica: 'Matemática Mental', estatisticas: 'Estatísticas Gerais', 'memoria-stats': 'Estatísticas: Vocabulário', 'matematica-stats': 'Estatísticas: Matemática Mental' };
+
+                        this.elements.homeHeader.classList.toggle('hidden', !isHome);
+                        this.elements.mobileHeader.classList.toggle('hidden', isHome);
+                        this.elements.mainTopBar.classList.toggle('md:flex', !isHome);
+                        this.elements.sidebar.classList.toggle('md:flex', !isHome);
+                        this.elements.mainContent.classList.toggle('md:ml-[280px]', !isHome && !this.elements.sidebar.classList.contains('collapsed'));
+                        this.elements.mainContent.classList.toggle('md:ml-[80px]', !isHome && this.elements.sidebar.classList.contains('collapsed'));
+                        if (isHome) this.elements.mainContent.className = 'flex-grow transition-all duration-300';
+
+                        const targetView = this.elements.views[viewName] || this.elements.views.home;
+                        targetView.classList.remove('hidden');
+                        if (!isHome) {
+                            this.elements.mobileHeaderTitle.textContent = viewTitles[viewName] || 'NeuroPulse';
+                        }
+                        
+                        if (viewName === 'curiosidade') NeuroPulseApp.services.wikipedia.loadCuriosity();
+                        if (viewName === 'memoria') NeuroPulseApp.games.common.setupTrainer('memoria');
+                        if (viewName === 'matematica') NeuroPulseApp.games.common.setupTrainer('matematica');
+                        if (viewName === 'estatisticas') NeuroPulseApp.charting.renderGeneralChart();
+                        if (viewName === 'memoria-stats') NeuroPulseApp.charting.renderTestCharts('memoria');
+                        if (viewName === 'matematica-stats') NeuroPulseApp.charting.renderTestCharts('matematica');
+
+                        this.elements.navLinks.forEach(l => l.classList.remove('active'));
+                        const activeLink = document.querySelector(`.nav-link[href="#${viewName}"]`);
+                        if (activeLink) activeLink.classList.add('active');
+                        
+                        if (viewName === 'memoria' || viewName === 'matematica') {
+                            if (this.elements.desafiosSubmenu && !this.elements.sidebar.classList.contains('collapsed')) {
+                                this.elements.desafiosSubmenu.classList.remove('hidden');
+                                if(this.elements.desafiosCaret) this.elements.desafiosCaret.classList.add('rotate-180');
+                            }
+                        }
+
+                        window.location.hash = viewName;
+                    },
+                    openMobileSidebar() {
+                        NeuroPulseApp.ui.elements.sidebar.classList.remove('-translate-x-full');
+                        NeuroPulseApp.ui.elements.sidebarBackdrop.classList.remove('hidden');
+                        document.body.classList.add('overflow-hidden');
+                    },
+                    closeMobileSidebar() {
+                        NeuroPulseApp.ui.elements.sidebar.classList.add('-translate-x-full');
+                        NeuroPulseApp.ui.elements.sidebarBackdrop.classList.add('hidden');
+                        document.body.classList.remove('overflow-hidden');
+                    },
+                    setSidebarState(isCollapsing) {
+                        if (window.getComputedStyle(this.elements.sidebarToggleBtn).display === 'none') return;
+                        
+                        // Adicionamos os elementos do menu de som ambiente para poder manipulá-los
+                        const { sidebar, mainContent, sidebarLogo, sidebarToggleIcon, desafiosSubmenu, desafiosCaret, ambientSubmenu, ambientCaret } = this.elements;
+                        sidebar.classList.toggle('collapsed', isCollapsing);
+                        mainContent.classList.toggle('md:ml-[280px]', !isCollapsing);
+                        mainContent.classList.toggle('md:ml-[80px]', isCollapsing);
+                        sidebarLogo.classList.toggle('hidden', isCollapsing);
+                        sidebarToggleIcon.classList.toggle('ph-list', isCollapsing);
+                        sidebarToggleIcon.classList.toggle('ph-caret-circle-left', !isCollapsing);
+
+                        if(isCollapsing) {
+                            sidebarToggleIcon.classList.remove('rotate-180');
+                            // Fecha o submenu de desafios e reseta o ícone
+                            if (desafiosSubmenu) desafiosSubmenu.classList.add('hidden');
+                            if (desafiosCaret) desafiosCaret.classList.remove('rotate-180');
+                            
+                            // (NOVO) Fecha o submenu de som ambiente e reseta o ícone
+                            if (ambientSubmenu) ambientSubmenu.classList.add('hidden');
+                            if (ambientCaret) ambientCaret.classList.remove('rotate-180');
+                        }
+                    },
+                    setupThemeButtonHover(buttonElement) {
+                        if (!buttonElement) return;
+                        const icon = buttonElement.querySelector('i');
+                        if (!icon) return;
+                        buttonElement.addEventListener('mouseenter', () => icon.classList.replace('ph-thin', 'ph-fill'));
+                        buttonElement.addEventListener('mouseleave', () => icon.classList.replace('ph-fill', 'ph-thin'));
+                    }
+                },
+
+                // 4. SERVICES: Lógica para interações externas (API, LocalStorage)
+                ambientPlayer: {
+                    init() {
+                        const { ambient } = NeuroPulseApp.ui.elements;
+                        const { state } = NeuroPulseApp;
+                        
+                        // Carregar volume salvo
+                        const savedVolume = localStorage.getItem('ambientVolume');
+                        if (savedVolume) {
+                            state.ambientPlayer.volume = parseFloat(savedVolume);
+                            ambient.volumeSlider.value = state.ambientPlayer.volume;
+                        }
+
+                        Object.values(ambient.audio).forEach(audioEl => {
+                            if(audioEl) audioEl.volume = state.ambientPlayer.volume;
+                        });
+                    },
+                    
+                    setVolume(volume) {
+                        const { ambient } = NeuroPulseApp.ui.elements;
+                        // ATUALIZAÇÃO: Sincroniza a posição da barra de volume visual
+                        ambient.volumeSlider.value = volume; 
+                        
+                        NeuroPulseApp.state.ambientPlayer.volume = volume;
+                        Object.values(ambient.audio).forEach(audioEl => {
+                            if(audioEl) audioEl.volume = volume;
+                        });
+                        localStorage.setItem('ambientVolume', volume);
+                    },
+
+                    setSound(sound) {
+                        this.pause();
+                        NeuroPulseApp.state.ambientPlayer.currentSound = sound;
+                        
+                        const { mainPlayPauseBtn, mobilePlayPauseBtn, homePlayPauseBtn } = NeuroPulseApp.ui.elements.ambient;
+                        const shouldHide = sound === 'none';
+
+                        if (mainPlayPauseBtn) mainPlayPauseBtn.classList.toggle('hidden', shouldHide);
+                        if (mobilePlayPauseBtn) mobilePlayPauseBtn.classList.toggle('hidden', shouldHide);
+                        if (homePlayPauseBtn) homePlayPauseBtn.classList.toggle('hidden', shouldHide);
+
+                        if (!shouldHide) {
+                            this.play();
+                        }
+                    },
+
+                    play() {
+                        const { state, ui } = NeuroPulseApp;
+                        const soundKey = state.ambientPlayer.currentSound;
+                        if (soundKey === 'none') return;
+                        
+                        const audioEl = ui.elements.ambient.audio[soundKey];
+                        if (audioEl) {
+                            audioEl.play().catch(e => console.error("Erro ao tocar o som:", e));
+                            state.ambientPlayer.isPlaying = true;
+                            [ui.elements.ambient.playIcon, ui.elements.ambient.mainPlayIcon, ui.elements.ambient.mobilePlayIcon, ui.elements.ambient.homePlayIcon].forEach(icon => {
+                                if(icon) icon.classList.replace('ph-play', 'ph-pause');
+                            });
+                        }
+                    },
+
+                    pause() {
+                        const { ui } = NeuroPulseApp;
+                        Object.values(ui.elements.ambient.audio).forEach(audioEl => {
+                            if(audioEl) audioEl.pause();
+                        });
+                        NeuroPulseApp.state.ambientPlayer.isPlaying = false;
+                        [ui.elements.ambient.playIcon, ui.elements.ambient.mainPlayIcon, ui.elements.ambient.mobilePlayIcon, ui.elements.ambient.homePlayIcon].forEach(icon => {
+                            if(icon) icon.classList.replace('ph-pause', 'ph-play');
+                        });
+                    },
+
+                    togglePlay() {
+                        if (NeuroPulseApp.state.ambientPlayer.isPlaying) {
+                            this.pause();
+                        } else {
+                            this.play();
+                        }
+                    }
+                },
+
+                services: {
+                    persistence: {
+                        saveStats() {
+                            localStorage.setItem('neuroPulseStats', JSON.stringify(NeuroPulseApp.state.stats));
+                        },
+                        loadStats() {
+                            const saved = localStorage.getItem('neuroPulseStats');
+                            if (saved) {
+                                try {
+                                    const parsed = JSON.parse(saved);
+                                    if (parsed.memoria && parsed.matematica) {
+                                        Object.assign(NeuroPulseApp.state.stats, parsed);
+                                    }
+                                } catch (e) {
+                                    console.error("Falha ao carregar estatísticas:", e);
+                                }
+                            }
+                        }
+                    },
+                    wikipedia: {
+                        async fetchCategoryMembers(category) {
+                            const params = new URLSearchParams({ action: 'query', list: 'categorymembers', cmtitle: category, cmlimit: '500', format: 'json', origin: '*' });
+                            const res = await fetch(`${NeuroPulseApp.config.wiki.API_BASE}?${params}`);
+                            if (!res.ok) throw new Error(`Falha ao buscar membros de ${category}`);
+                            const data = await res.json();
+                            return data.query.categorymembers.map(p => p.title);
+                        },
+                        async fetchRandomSciTechArticle() {
+                            const categories = NeuroPulseApp.config.wiki.CATEGORIES;
+                            const category = categories[Math.floor(Math.random() * categories.length)];
+                            const titles = await this.fetchCategoryMembers(category);
+                            if (!titles.length) throw new Error(`Nenhum artigo em ${category}`);
+                            const picked = titles[Math.floor(Math.random() * titles.length)];
+                            const sumRes = await fetch(`${NeuroPulseApp.config.wiki.SUMMARY_API}${encodeURIComponent(picked)}?origin=*`);
+                            if (!sumRes.ok) throw new Error(`Erro ao buscar resumo de ${picked}`);
+                            return sumRes.json();
+                        },
+                        processExcerpt(text) {
+                            if (!text) return '<p>Conteúdo não disponível.</p>';
+                            const sentences = text.split(/(?<=[.!?])\s+/).filter(s => s.trim().length > 0);
+                            const selected = sentences.slice(0, Math.min(3, sentences.length));
+                            return `<p>${selected.join(' ').trim()}</p>`;
+                        },
+                        async loadCuriosity() {
+                            const resultEl = NeuroPulseApp.ui.elements.curiosityResult;
+                            resultEl.innerHTML = '<p class="text-cool-gray italic">Buscando uma nova curiosidade...</p>';
+                            let article = null, attempts = 0;
+                            while (attempts < 10 && !article) {
+                                try {
+                                    const fetched = await this.fetchRandomSciTechArticle();
+                                    if (fetched?.extract && fetched.extract.length > 20) article = fetched;
+                                } catch (error) { console.error(`Tentativa ${++attempts} falhou:`, error); }
+                            }
+                            if (article) {
+                                resultEl.innerHTML = `
+                                    <div class="animate-fade-in">
+                                        <h3 class="text-3xl md:text-4xl font-bold mb-4 text-near-white">${article.title}</h3>
+                                        <div class="text-lg md:text-xl text-cool-gray">${this.processExcerpt(article.extract)}</div>
+                                        <button id="reload-curiosity-btn" class="mt-8 p-3 text-cool-gray hover:text-cognitive-blue transition-colors duration-200" title="Gerar nova curiosidade">
+                                            <i class="ph-thin ph-arrow-clockwise text-4xl"></i>
+                                        </button>
+                                    </div>`;
+                                document.getElementById('reload-curiosity-btn').addEventListener('click', () => this.loadCuriosity());
+                            } else {
+                                resultEl.innerHTML = `<span class="text-red-600">Não foi possível carregar uma curiosidade. Tente novamente mais tarde.</span>`;
+                            }
+                        }
+                    }
+                },
+
+                // 5. GAMES: Lógica e estado dos desafios
+                games: {
+                    common: {
+                        formatTime: (s) => `${Math.floor(s / 60).toString().padStart(2, '0')}:${(s % 60).toString().padStart(2, '0')}`,
+                        startTimer(type) {
+                            const timerEl = document.getElementById(`${type}-timer`);
+                            NeuroPulseApp.state.activeSession.startTime = Date.now();
+                            NeuroPulseApp.state.activeSession.timerInterval = setInterval(() => {
+                                const elapsed = Math.floor((Date.now() - NeuroPulseApp.state.activeSession.startTime) / 1000);
+                                if (timerEl) timerEl.textContent = this.formatTime(elapsed);
+                            }, 1000);
+                        },
+                        stopSession() {
+                            const { type, difficulty, startTime, acertos, erros, timerInterval } = NeuroPulseApp.state.activeSession;
+                            if (!type) return;
+                            clearInterval(timerInterval);
+                            const duration = Math.floor((Date.now() - startTime) / 1000);
+                            if (duration > 5 || acertos > 0 || erros > 0) {
+                                const statsForGame = NeuroPulseApp.state.stats[type];
+                                if (statsForGame && statsForGame[difficulty]) {
+                                    if (!statsForGame[difficulty].sessions) statsForGame[difficulty].sessions = [];
+                                    statsForGame[difficulty].sessions.push({ acertos, erros, duration, timestamp: Date.now() });
+                                    NeuroPulseApp.services.persistence.saveStats();
+                                }
+                            }
+                            NeuroPulseApp.state.activeSession = { type: null, difficulty: null, startTime: null, timerInterval: null, acertos: 0, erros: 0 };
+                        },
+                        startGame(type, difficulty) {
+                            this.stopSession();
+                            NeuroPulseApp.state.activeSession = { ...NeuroPulseApp.state.activeSession, type, difficulty, acertos: 0, erros: 0 };
+                            
+                            // Oculta apenas os títulos e mostra a área do jogo
+                            document.getElementById(`${type}-start-prompt`).classList.add('hidden');
+                            document.getElementById(`${type}-game-area`).classList.remove('hidden');
+                            
+                            this.startTimer(type);
+                            if (type === 'memoria') NeuroPulseApp.games.memoria.showQuestion();
+                            if (type === 'matematica') NeuroPulseApp.games.matematica.generateProblem();
+                        },
+                        setupTrainer(type) {
+                            // Garante que a área do jogo esteja oculta e os títulos de início visíveis
+                            document.getElementById(`${type}-game-area`).classList.add('hidden');
+                            document.getElementById(`${type}-start-prompt`).classList.remove('hidden');
+                            
+                            document.getElementById(`${type}-timer`).textContent = '00:00';
+                            
+                            // Adiciona o evento de clique aos botões de dificuldade
+                            document.querySelectorAll(`.${type}-start-button`).forEach(btn => {
+                                btn.onclick = () => this.startGame(type, btn.dataset.difficulty);
+                            });
+                        }
+                    },
+                    memoria: {
+                        showQuestion() {
+                            const { difficulty } = NeuroPulseApp.state.activeSession;
+                            const deck = NeuroPulseApp.config.challenges.memoria.decks[difficulty];
+                            
+                            // Seleciona um índice aleatório do baralho
+                            const randomIndex = Math.floor(Math.random() * deck.length);
+                            const card = deck[randomIndex];
+                            
+                            // O estado 'currentMemoryIndex' não é mais necessário para esta lógica, mas não causa problemas.
+                            
+                            document.getElementById('memoria-question').textContent = card.q;
+                            document.getElementById('memoria-feedback').textContent = '';
+                            
+                            const incorrect = deck.filter(c => c.a !== card.a).sort(() => 0.5 - Math.random()).slice(0, 3);
+                            const options = [card.a, ...incorrect.map(c=>c.a)].sort(() => 0.5 - Math.random());
+                            
+                            const container = document.getElementById('memoria-options');
+                            container.innerHTML = '';
+                            options.forEach(option => {
+                                const button = document.createElement('button');
+                                button.textContent = option;
+                                button.className = 'option-btn text-base sm:text-lg font-semibold py-3 rounded-lg';
+                                button.onclick = () => this.handleAnswer(option === card.a, button, card.a);
+                                container.appendChild(button);
+                            });
+                        },
+                        handleAnswer(isCorrect, btn, correctAns) {
+                            // Mantém a lógica de desabilitar botões e aplicar cores
+                            document.querySelectorAll('#memoria-options button').forEach(b => b.disabled = true);
+                            if (isCorrect) {
+                                NeuroPulseApp.state.activeSession.acertos++;
+                                btn.classList.add('correct');
+                            } else {
+                                NeuroPulseApp.state.activeSession.erros++;
+                                btn.classList.add('incorrect');
+                                document.querySelectorAll('#memoria-options button').forEach(b => {
+                                    if (b.textContent === correctAns) b.classList.add('correct');
+                                });
+                            }
+                            
+                            // Cria e exibe o botão "Próximo"
+                            const feedbackEl = document.getElementById('memoria-feedback');
+                            feedbackEl.innerHTML = ''; 
+                            const proximoBtn = document.createElement('button');
+                            proximoBtn.textContent = 'Próximo';
+                            proximoBtn.className = 'underline text-cognitive-blue hover:text-blue-400';
+                            feedbackEl.appendChild(proximoBtn);
+
+                            // Inicia o timer para avançar automaticamente após 3 segundos
+                            const proximoTimeout = setTimeout(() => {
+                                NeuroPulseApp.games.memoria.showQuestion();
+                            }, 1500); // 3000ms = 3 segundos
+                            
+                            // Define o clique para CANCELAR o timer e avançar imediatamente
+                            proximoBtn.onclick = () => {
+                                clearTimeout(proximoTimeout); // Cancela o avanço automático
+                                NeuroPulseApp.games.memoria.showQuestion(); // Carrega a próxima questão
+                            };
+                        }
+                    },
+                    matematica: {
+                        generateProblem() {
+                            const problemEl = document.getElementById('matematica-problem');
+                            const feedbackEl = document.getElementById('matematica-feedback');
+                            const container = document.getElementById('matematica-options');
+                            let problem = '', answer = 0;
+                            const num1 = Math.floor(Math.random() * 10) + 1, num2 = Math.floor(Math.random() * 10) + 1;
+                            
+                            switch(NeuroPulseApp.state.activeSession.difficulty) {
+                                case 'facil':
+                                    if (Math.random() > 0.5) { problem = `${num1+num2} - ${num1}`; answer = num2; } else { problem = `${num1} + ${num2}`; answer = num1 + num2; }
+                                    break;
+                                case 'intermediario':
+                                    if (Math.random() > 0.5) { problem = `${num1 * num2} ÷ ${num1}`; answer = num2; } else { problem = `${num1} x ${num2}`; answer = num1 * num2; }
+                                    break;
+                                case 'expert':
+                                    const a = Math.floor(Math.random() * 5) + 1, x = Math.floor(Math.random() * 5) + 1, b = Math.floor(Math.random() * 10) + 1;
+                                    problem = `${a}x + ${b} = ${a*x+b}`; answer = x;
+                                    break;
+                            }
+
+                            feedbackEl.textContent = '';
+                            problemEl.textContent = problem;
+                            const options = new Set([answer]);
+                            while(options.size < 4) {
+                                const wrongAnswer = answer + Math.floor(Math.random() * 10) - 5;
+                                if(wrongAnswer !== answer) options.add(wrongAnswer);
+                            }
+                            
+                            container.innerHTML = '';
+                            Array.from(options).sort(() => 0.5 - Math.random()).forEach(option => {
+                                const button = document.createElement('button');
+                                button.textContent = option;
+                                button.className = 'option-btn text-2xl font-bold py-4 rounded-lg';
+                                button.onclick = () => this.handleAnswer(option === answer, button, answer);
+                                container.appendChild(button);
+                            });
+                        },
+                        handleAnswer(isCorrect, btn, correctAns) {
+                            document.querySelectorAll('#matematica-options button').forEach(b => b.disabled = true);
+                            if (isCorrect) {
+                                NeuroPulseApp.state.activeSession.acertos++;
+                                btn.classList.add('correct');
+                            } else {
+                                NeuroPulseApp.state.activeSession.erros++;
+                                btn.classList.add('incorrect');
+                                document.querySelectorAll('#matematica-options button').forEach(b => {
+                                    if (parseInt(b.textContent) === correctAns) b.classList.add('correct');
+                                });
+                            }
+
+                            const feedbackEl = document.getElementById('matematica-feedback');
+                            feedbackEl.innerHTML = '';
+                            const proximoBtn = document.createElement('button');
+                            proximoBtn.textContent = 'Próximo';
+                            proximoBtn.className = 'underline text-cognitive-blue hover:text-blue-400';
+                            feedbackEl.appendChild(proximoBtn);
+
+                            const proximoTimeout = setTimeout(() => {
+                                this.generateProblem();
+                            }, 1500);
+
+                            proximoBtn.onclick = () => {
+                                clearTimeout(proximoTimeout);
+                                this.generateProblem();
+                            };
+                        }
+                    }
+                },
+                
+                // 6. CHARTING: Toda a lógica de criação de gráficos
+                charting: {
+                    getChartColors() {
+                        const isDark = document.documentElement.classList.contains('dark');
+                        Chart.defaults.color = isDark ? '#888888' : '#6b7280';
+                        Chart.defaults.borderColor = isDark ? 'rgba(255, 255, 255, 0.1)' : '#e5e7eb';
+                        return { successColor: isDark ? '#2ECC71' : '#16a34a', errorColor: isDark ? '#E74C3C' : '#dc2626', warningColor: isDark ? '#F1C40F' : '#f59e0b', blueColor: isDark ? '#4A90E2' : '#60a5fa', surfaceColor: isDark ? '#1E1E1E' : '#ffffff' };
+                    },
+                    renderGeneralChart() {
+                        if (NeuroPulseApp.state.charts.general) NeuroPulseApp.state.charts.general.destroy();
+                        const colors = this.getChartColors();
+                        const { stats } = NeuroPulseApp.state;
+                        const memSessions = Object.values(stats.memoria).flatMap(level => level.sessions || []);
+                        const mathSessions = Object.values(stats.matematica).flatMap(level => level.sessions || []);
+                        const memTotal = memSessions.reduce((acc, s) => ({acertos: acc.acertos + s.acertos, erros: acc.erros + s.erros}), {acertos: 0, erros: 0});
+                        const mathTotal = mathSessions.reduce((acc, s) => ({acertos: acc.acertos + s.acertos, erros: acc.erros + s.erros}), {acertos: 0, erros: 0});
+
+                        const memQuestions = memTotal.acertos + memTotal.erros;
+                        const mathQuestions = mathTotal.acertos + mathTotal.erros;
+
+                        const dataLabelsPlugin = {
+                            id: 'customDataLabels',
+                            afterDatasetsDraw(chart, args, options) {
+                                const { ctx, data } = chart;
+                                ctx.save();
+                                ctx.font = '10px Inter, sans-serif';
+                                ctx.fillStyle = 'white';
+                                ctx.textAlign = 'right';
+                                ctx.textBaseline = 'middle';
+
+                                data.datasets.forEach((dataset, i) => {
+                                    chart.getDatasetMeta(i).data.forEach((datapoint, j) => {
+                                        const value = dataset.data[j];
+                                        if (value === 0) return;
+
+                                        const total = j === 0 ? memQuestions : mathQuestions;
+                                        if (total === 0) return;
+
+                                        const percentage = `${((value / total) * 100).toFixed(0)}%`;
+
+                                        const xPos = datapoint.x - 5;
+                                        const yPos = datapoint.y;
+
+                                        if ((datapoint.x - datapoint.base) > 30) {
+                                            ctx.fillText(percentage, xPos, yPos);
+                                        }
+                                    });
+                                });
+                                ctx.restore();
+                            }
+                        };
+
+                        NeuroPulseApp.state.charts.general = new Chart('general-summary-chart', {
+                            type: 'bar',
+                            data: {
+                                labels: ['Expandir Vocabulário', 'Matemática Mental'],
+                                datasets: [
+                                    { label: 'Acertos', data: [memTotal.acertos, mathTotal.acertos], backgroundColor: colors.successColor },
+                                    { label: 'Erros', data: [memTotal.erros, mathTotal.erros], backgroundColor: colors.errorColor }
+                                ]
+                            },
+                            options: {
+                                indexAxis: 'y',
+                                responsive: true,
+                                maintainAspectRatio: false,
+                                scales: {
+                                    x: { stacked: true, beginAtZero: true },
+                                    y: { stacked: true }
+                                },
+                                plugins: {
+                                    tooltip: {
+                                        enabled: true
+                                    }
+                                }
+                            },
+                            plugins: [dataLabelsPlugin]
+                        });
+                    },
+                    renderTestCharts(type) {
+                        ['donut', 'scatter', 'grouped-bar', 'line'].forEach(suffix => { if (NeuroPulseApp.state.charts[`${type}-${suffix}`]) NeuroPulseApp.state.charts[`${type}-${suffix}`].destroy(); });
+                        const colors = this.getChartColors();
+                        const filter = NeuroPulseApp.state.currentFilters[type];
+                        const sessions = (filter === 'all') ? Object.values(NeuroPulseApp.state.stats[type]).flatMap(level => level.sessions || []) : (NeuroPulseApp.state.stats[type][filter]?.sessions || []);
+                        
+                        const fifteenDaysAgo = Date.now() - (15 * 24 * 60 * 60 * 1000);
+                        const history15Days = sessions.filter(s => s.timestamp >= fifteenDaysAgo);
+                        const acertos15 = history15Days.reduce((sum, s) => sum + s.acertos, 0);
+                        const total15 = history15Days.reduce((sum, s) => sum + s.acertos + s.erros, 0);
+                        const acuracia = total15 === 0 ? 0 : (acertos15 / total15) * 100;
+                        const acuraciaEl = document.getElementById(`${type}-acuracia`);
+                        acuraciaEl.textContent = `${acuracia.toFixed(1)}%`;
+                        acuraciaEl.style.color = acuracia >= 80 ? colors.successColor : acuracia >= 40 ? colors.warningColor : colors.errorColor;
+
+                        document.getElementById(`${type}-sessoes`).textContent = sessions.length;
+                        const totalAcertos = sessions.reduce((sum, s) => sum + s.acertos, 0);
+                        const totalErros = sessions.reduce((sum, s) => sum + s.erros, 0);
+                        NeuroPulseApp.state.charts[`${type}-donut`] = new Chart(`${type}-chart`, { type: 'doughnut', data: { labels: ['Acertos', 'Erros'], datasets: [{ data: [totalAcertos, totalErros], backgroundColor: [colors.successColor, colors.errorColor], borderColor: colors.surfaceColor, borderWidth: 0 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } } });
+                        NeuroPulseApp.state.charts[`${type}-scatter`] = new Chart(`${type}-scatter-chart`, { type: 'scatter', data: { datasets: [{ label: 'Saldo de Acertos vs Duração (min)', data: sessions.map(s => ({ x: s.duration / 60, y: s.acertos - s.erros })), backgroundColor: colors.blueColor }] }, options: { responsive: true, maintainAspectRatio: false, scales: {x: {title: {display: true, text: 'Duração (minutos)'}}, y: {title: {display: true, text: 'Saldo (Acertos - Erros)'}}} } });
+                        
+                        const durationBuckets = { '0-1 min': {acertos: 0, erros: 0}, '1-2 min': {acertos: 0, erros: 0}, '> 2 min': {acertos: 0, erros: 0} };
+                        sessions.forEach(s => { let bucket = s.duration > 120 ? '> 2 min' : s.duration > 60 ? '1-2 min' : '0-1 min'; durationBuckets[bucket].acertos += s.acertos; durationBuckets[bucket].erros += s.erros; });
+                        NeuroPulseApp.state.charts[`${type}-grouped-bar`] = new Chart(`${type}-grouped-bar-chart`, { type: 'bar', data: { labels: Object.keys(durationBuckets), datasets: [ { label: 'Acertos', data: Object.values(durationBuckets).map(b => b.acertos), backgroundColor: colors.successColor }, { label: 'Erros', data: Object.values(durationBuckets).map(b => b.erros), backgroundColor: colors.errorColor } ] }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true } } } });
+                        
+                        const sortedSessions = [...sessions].sort((a,b) => a.duration - b.duration);
+                        NeuroPulseApp.state.charts[`${type}-line`] = new Chart(`${type}-line-chart`, { type: 'line', data: { labels: sortedSessions.map(s => `${(s.duration/60).toFixed(1)} min`), datasets: [ { label: 'Acertos', data: sortedSessions.map(s => s.acertos), borderColor: colors.successColor, tension: 0.1 }, { label: 'Erros', data: sortedSessions.map(s => s.erros), borderColor: colors.errorColor, tension: 0.1 } ] }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true }, x: { title: {display: true, text: 'Sessões Ordenadas por Duração'} } } } });
+                    }
+                },
+                
+                // 7. EVENTOS E INICIALIZAÇÃO
+                bindEvents() {
+                    const { ui, state } = this;
+                    
+                    // Navegação
+                    window.addEventListener('hashchange', () => this.handleHashChange());
+                    ui.elements.sidebarLogo.addEventListener('click', e => { e.preventDefault(); ui.showView('home'); });
+
+                    // Tema
+                    ui.elements.themeToggle.addEventListener('click', () => ui.toggleTheme());
+                    ui.elements.homeThemeToggle.addEventListener('click', () => ui.toggleTheme());
+                    ui.setupThemeButtonHover(ui.elements.themeToggle);
+                    ui.setupThemeButtonHover(ui.elements.homeThemeToggle);
+
+                    // Sidebar Mobile
+                    ui.elements.hamburgerBtn.addEventListener('click', () => ui.openMobileSidebar());
+                    ui.elements.homeHamburgerBtn.addEventListener('click', () => ui.openMobileSidebar());
+                    ui.elements.sidebarBackdrop.addEventListener('click', () => ui.closeMobileSidebar());
+                    ui.elements.sidebarCloseBtn.addEventListener('click', () => ui.closeMobileSidebar());
+
+                    // Sidebar Desktop
+                    ui.elements.sidebarToggleBtn.addEventListener('click', () => {
+                        if (window.getComputedStyle(ui.elements.sidebarToggleBtn).display === 'none') return;
+                        state.isSidebarPinned = !state.isSidebarPinned;
+                        ui.elements.sidebarToggleIcon.classList.toggle('rotate-180', state.isSidebarPinned);
+                        if (!state.isSidebarPinned && !ui.elements.sidebar.matches(':hover')) {
+                            ui.setSidebarState(true);
+                        }
+                    });
+
+                    ui.elements.sidebar.addEventListener('mouseenter', () => {
+                        if (window.getComputedStyle(ui.elements.sidebarToggleBtn).display === 'none') return;
+                        clearTimeout(state.sidebarHoverTimeout);
+                        state.sidebarHoverTimeout = setTimeout(() => {
+                            if (!state.isSidebarPinned) ui.setSidebarState(false);
+                        }, 250);
+                    });
+
+                    ui.elements.sidebar.addEventListener('mouseleave', () => {
+                        if (window.getComputedStyle(ui.elements.sidebarToggleBtn).display === 'none') return;
+                        clearTimeout(state.sidebarHoverTimeout);
+                        if (!state.isSidebarPinned) ui.setSidebarState(true);
+                    });
+                    
+                    // Acordeão Desafios
+                    ui.elements.desafiosToggle.addEventListener('click', () => {
+                        if (ui.elements.sidebar.classList.contains('collapsed')) {
+                            ui.setSidebarState(false);
+                        }
+                        ui.elements.desafiosSubmenu.classList.toggle('hidden');
+                        ui.elements.desafiosCaret.classList.toggle('rotate-180');
+                    });
+                    
+                    // Acordeão Som Ambiente
+                    if (ui.elements.ambientToggle) {
+                        ui.elements.ambientToggle.addEventListener('click', () => {
+                            if (ui.elements.sidebar.classList.contains('collapsed')) {
+                                ui.setSidebarState(false);
+                            }
+                            ui.elements.ambientSubmenu.classList.toggle('hidden');
+                            ui.elements.ambientCaret.classList.toggle('rotate-180');
+                        });
+                    }
+                    
+                    // Player de Som Ambiente
+                    const { ambient } = ui.elements;
+                    if (ambient.playPauseBtn) {
+                        // Vincular o evento de clique a todos os botões de play/pause
+                        [ambient.playPauseBtn, ambient.mainPlayPauseBtn, ambient.mobilePlayPauseBtn, ambient.homePlayPauseBtn].forEach(btn => {
+                            if (btn) btn.addEventListener('click', () => this.ambientPlayer.togglePlay());
+                        });
+
+                        // Lógica modificada para o seletor de som
+                        ambient.soundSelect.addEventListener('change', (e) => {
+                            const selectedSound = e.target.value;
+                            if (selectedSound === '852hz') {
+                                // Define o volume para 5% (0.05)
+                                this.ambientPlayer.setVolume(0.05);
+                            }
+                            // Continua para tocar o som selecionado
+                            this.ambientPlayer.setSound(selectedSound); 
+                        });
+                        ambient.volumeSlider.addEventListener('input', (e) => this.ambientPlayer.setVolume(e.target.value));
+                    }
+                    
+                    // Filtros de Estatísticas
+                    ['memoria', 'matematica'].forEach(type => {
+                        document.querySelectorAll(`#${type}-stats-view .${type}-filter-btn`).forEach(btn => {
+                            btn.addEventListener('click', () => {
+                                document.querySelectorAll(`#${type}-stats-view .${type}-filter-btn`).forEach(b => b.classList.remove('active'));
+                                btn.classList.add('active');
+                                state.currentFilters[type] = btn.dataset.filter;
+                                this.charting.renderTestCharts(type);
+                            });
+                        });
+                    });
+                },
+
+                handleHashChange() {
+                    this.ui.showView(window.location.hash.substring(1) || 'home');
+                },
+
+                init() {
+                    this.ui.cacheElements();
+                    this.services.persistence.loadStats();
+                    this.ambientPlayer.init();
+                    this.bindEvents();
+                    
+                    const savedTheme = localStorage.getItem('theme') || 'dark';
+                    this.ui.applyTheme(savedTheme);
+                    this.handleHashChange(); // Define a view inicial
+                    
+                    // Configura estado inicial da sidebar no desktop
+                    if (window.getComputedStyle(this.ui.elements.sidebarToggleBtn).display !== 'none') {
+                        this.ui.setSidebarState(true);
+                    }
+                }
+            };
+
+            NeuroPulseApp.init();
+        });
+    </script>
+</body>
+</html>
