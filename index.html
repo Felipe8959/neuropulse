@@ -983,19 +983,11 @@
                                     if (b.textContent === correctAns) b.classList.add('correct');
                                 });
                             }
-                            
-                            // Cria e exibe o botão "Próximo"
-                            const feedbackEl = document.getElementById('memoria-feedback');
-                            feedbackEl.innerHTML = ''; 
-                            const proximoBtn = document.createElement('button');
-                            proximoBtn.textContent = 'Próximo';
-                            proximoBtn.className = 'underline text-cognitive-blue hover:text-blue-400';
-                            feedbackEl.appendChild(proximoBtn);
 
                             // Inicia o timer para avançar automaticamente após 3 segundos
                             const proximoTimeout = setTimeout(() => {
                                 NeuroPulseApp.games.memoria.showQuestion();
-                            }, 1500); // 3000ms = 3 segundos
+                            }, 1000); // 3000ms = 3 segundos
                             
                             // Define o clique para CANCELAR o timer e avançar imediatamente
                             proximoBtn.onclick = () => {
@@ -1071,14 +1063,10 @@
 
                             const feedbackEl = document.getElementById('matematica-feedback');
                             feedbackEl.innerHTML = '';
-                            const proximoBtn = document.createElement('button');
-                            proximoBtn.textContent = 'Próximo';
-                            proximoBtn.className = 'underline text-cognitive-blue hover:text-blue-400';
-                            feedbackEl.appendChild(proximoBtn);
 
                             const proximoTimeout = setTimeout(() => {
                                 this.generateProblem();
-                            }, 1500);
+                            }, 1000);
 
                             proximoBtn.onclick = () => {
                                 clearTimeout(proximoTimeout);
