@@ -219,18 +219,18 @@
                     <span class="sidebar-tooltip absolute left-full ml-4 top-1/2 -translate-y-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 invisible whitespace-nowrap">Curiosidade</span>
                 </li>
                 <li class="relative sidebar-item">
-                    <button id="desafios-toggle" class="w-full flex justify-between items-center p-3 rounded-lg text-near-white">
-                        <div class="flex items-center gap-3">
-                            <i class="ph-thin ph-game-controller text-xl"></i>
-                            <span class="sidebar-item-text">Desafios</span>
-                        </div>
-                        <i id="desafios-caret" class="ph-thin ph-caret-down caret-icon sidebar-item-text"></i>
-                    </button>
-                    <span class="sidebar-tooltip absolute left-full ml-4 top-1/2 -translate-y-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 invisible whitespace-nowrap">Desafios</span>
-                    <ul id="desafios-submenu" class="pl-6 pt-1 hidden space-y-2">
-                        <li><a href="#memoria" class="nav-link flex items-center gap-3 p-3 rounded-lg text-near-white"><i class="ph-thin ph-cards text-xl"></i><span class="sidebar-item-text">Expandir Vocabulário</span></a></li>
-                        <li><a href="#matematica" class="nav-link flex items-center gap-3 p-3 rounded-lg text-near-white"><i class="ph-thin ph-calculator text-xl"></i><span class="sidebar-item-text">Matemática Mental</span></a></li>
-                    </ul>
+                    <a href="#memoria" class="nav-link flex items-center gap-3 p-3 rounded-lg text-near-white">
+                        <i class="ph-thin ph-cards text-xl"></i>
+                        <span class="sidebar-item-text">Expandir Vocabulário</span>
+                    </a>
+                    <span class="sidebar-tooltip absolute left-full ml-4 top-1/2 -translate-y-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 invisible whitespace-nowrap">Expandir Vocabulário</span>
+                </li>
+                <li class="relative sidebar-item">
+                    <a href="#matematica" class="nav-link flex items-center gap-3 p-3 rounded-lg text-near-white">
+                        <i class="ph-thin ph-calculator text-xl"></i>
+                        <span class="sidebar-item-text">Matemática Mental</span>
+                    </a>
+                    <span class="sidebar-tooltip absolute left-full ml-4 top-1/2 -translate-y-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 invisible whitespace-nowrap">Matemática Mental</span>
                 </li>
                 <li class="relative sidebar-item">
                     <button id="ambient-toggle" class="w-full flex justify-between items-center p-3 rounded-lg text-near-white">
@@ -531,9 +531,6 @@
                             homeLogo: document.getElementById('home-logo'),
                             themeToggle: document.getElementById('theme-toggle'),
                             homeThemeToggle: document.getElementById('home-theme-toggle'),
-                            desafiosToggle: document.getElementById('desafios-toggle'),
-                            desafiosSubmenu: document.getElementById('desafios-submenu'),
-                            desafiosCaret: document.getElementById('desafios-caret'),
                             ambientToggle: document.getElementById('ambient-toggle'),
                             ambientSubmenu: document.getElementById('ambient-submenu'),
                             ambientCaret: document.getElementById('ambient-caret'),
@@ -627,13 +624,6 @@
                         const activeLink = document.querySelector(`.nav-link[href="#${viewName}"]`);
                         if (activeLink) activeLink.classList.add('active');
                         
-                        if (viewName === 'memoria' || viewName === 'matematica') {
-                            if (this.elements.desafiosSubmenu && !this.elements.sidebar.classList.contains('collapsed')) {
-                                this.elements.desafiosSubmenu.classList.remove('hidden');
-                                if(this.elements.desafiosCaret) this.elements.desafiosCaret.classList.add('rotate-180');
-                            }
-                        }
-
                         window.location.hash = viewName;
                     },
                     openMobileSidebar() {
@@ -660,9 +650,6 @@
 
                         if(isCollapsing) {
                             sidebarToggleIcon.classList.remove('rotate-180');
-                            // Fecha o submenu de desafios e reseta o ícone
-                            if (desafiosSubmenu) desafiosSubmenu.classList.add('hidden');
-                            if (desafiosCaret) desafiosCaret.classList.remove('rotate-180');
                             
                             // (NOVO) Fecha o submenu de som ambiente e reseta o ícone
                             if (ambientSubmenu) ambientSubmenu.classList.add('hidden');
@@ -1226,15 +1213,6 @@
                         if (window.getComputedStyle(ui.elements.sidebarToggleBtn).display === 'none') return;
                         clearTimeout(state.sidebarHoverTimeout);
                         if (!state.isSidebarPinned) ui.setSidebarState(true);
-                    });
-                    
-                    // Acordeão Desafios
-                    ui.elements.desafiosToggle.addEventListener('click', () => {
-                        if (ui.elements.sidebar.classList.contains('collapsed')) {
-                            ui.setSidebarState(false);
-                        }
-                        ui.elements.desafiosSubmenu.classList.toggle('hidden');
-                        ui.elements.desafiosCaret.classList.toggle('rotate-180');
                     });
                     
                     // Acordeão Som Ambiente
